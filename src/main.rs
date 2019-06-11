@@ -1,0 +1,95 @@
+extern crate chrono;
+extern crate clap;
+use chrono::prelude::*;
+use clap::{App, Arg, SubCommand};
+use std::fs;
+use std::path::Path;
+use std::io;
+use std::process;
+
+const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
+
+fn main() {
+    let app = App::new("blake")
+        .version("0.1.0")
+        .author("Jonathan M. Lange <jml@mumak.net>")
+        .about("Situated blogging platform")
+        .subcommand(SubCommand::with_name("new"))
+        .subcommand(SubCommand::with_name("edit"))
+        .subcommand(
+            SubCommand::with_name("build")
+                .arg(
+                    Arg::with_name("--rebuild").help("Rebuild everything, even if it's up-to-date"),
+                )
+                .arg(
+                    Arg::with_name("--posts-only")
+                        .help("Only build posts, don't build the indexes."),
+                ),
+        );
+    let matches = app.get_matches();
+    match matches.subcommand_name() {
+        Some("new") => new_post(),
+        Some("edit") => edit_post(),
+        Some("build") => build(),
+        Some(_) | None => {
+            println!("Invalid subcommand given.");
+            process::exit(2);
+        }
+    }
+}
+
+fn new_post() {
+    let now = Utc::now();
+    let name = format!("{}", now.format(POST_DATE_FORMAT));
+    edit_and_commit_post(Path::new("/Users/jml/src/notebook/posts"), &name);
+}
+
+fn edit_post() {
+    println!("edit");
+}
+
+fn build() {
+    println!("build");
+}
+
+fn edit_and_commit_post(posts_dir: &Path, name: &str) {
+    let mut post_file = posts_dir.to_owned();
+    post_file.push(name);
+    post_file.set_extension("md");
+    let prev = contents(&post_file);
+    edit(post_file.as_path());
+    let current = contents(&post_file);
+    if prev != current {
+        process::Command::new("git")
+            .current_dir(posts_dir)
+            .arg("add")
+            .arg(post_file)
+            .status()
+            .expect("Could not add file");
+        process::Command::new("git")
+            .current_dir(posts_dir)
+            .arg("commit")
+            .arg("-m")
+            .arg(format!("Add new post {}", name))
+            .status()
+            .expect("Could not commit file");
+    }
+}
+
+fn contents(path: &Path) -> Option<Vec<u8>> {
+    match fs::read(&path) {
+        Ok(bytes) => Some(bytes),
+        Err(err) => match err.kind() {
+            io::ErrorKind::NotFound => None,
+            _ => panic!("Could not read file: {}: {}", path.display(), err),
+        }
+    }
+}
+
+fn edit(file: &Path) {
+    process::Command::new("emacsclient")
+        .arg("-c")
+        .arg(file)
+        .status()
+        .expect(&format!("Failed to edit file: {}", file.display()));
+}
