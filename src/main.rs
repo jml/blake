@@ -2,12 +2,14 @@ extern crate chrono;
 extern crate clap;
 use chrono::prelude::*;
 use clap::{App, Arg, SubCommand};
+use std::ffi;
 use std::fs;
-use std::path::Path;
 use std::io;
+use std::path::Path;
 use std::process;
 
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
+const POSTS_DIR: &str = "/Users/jml/src/notebook/posts"; // Parameterize this.
 
 fn main() {
     let app = App::new("blake")
@@ -29,7 +31,7 @@ fn main() {
     let matches = app.get_matches();
     match matches.subcommand_name() {
         Some("new") => new_post(),
-        Some("edit") => edit_post(),
+        Some("edit") => edit_post(None),
         Some("build") => build(),
         Some(_) | None => {
             println!("Invalid subcommand given.");
@@ -38,20 +40,42 @@ fn main() {
     }
 }
 
+/// Create a new blog post.
 fn new_post() {
     let now = Utc::now();
     let name = format!("{}", now.format(POST_DATE_FORMAT));
-    edit_and_commit_post(Path::new("/Users/jml/src/notebook/posts"), &name);
+    edit_and_commit_post(Path::new(POSTS_DIR), &name);
 }
 
-fn edit_post() {
-    println!("edit");
+fn edit_post(name: Option<ffi::OsString>) {
+    let posts_dir = Path::new(POSTS_DIR);
+    let name = name.or_else(|| get_latest_file(posts_dir));
+    match name {
+        None => {
+            println!("Could not find post to edit.");
+        }
+        Some(n) => {
+            let name = Path::new(&n).file_stem().unwrap();
+            edit_and_commit_post(posts_dir, name.to_str().unwrap());
+        }
+    }
+}
+
+fn get_latest_file(posts_dir: &Path) -> Option<ffi::OsString> {
+    let entries = fs::read_dir(posts_dir)
+        .expect(&format!("Couldn't read directory: {}", posts_dir.display()));
+    entries
+        .filter_map(|entry| entry.ok().map(|e| e.file_name()))
+        .max()
 }
 
 fn build() {
     println!("build");
 }
 
+/// Edit the blog post with the given name inside the posts directory.
+///
+/// If it changes, ensure the change is committed.
 fn edit_and_commit_post(posts_dir: &Path, name: &str) {
     let mut post_file = posts_dir.to_owned();
     post_file.push(name);
@@ -76,16 +100,21 @@ fn edit_and_commit_post(posts_dir: &Path, name: &str) {
     }
 }
 
+/// Get the contents of a file as a vector.
+///
+/// If the file doesn't exist, return None. Panic if we get any other kind of
+/// error.
 fn contents(path: &Path) -> Option<Vec<u8>> {
     match fs::read(&path) {
         Ok(bytes) => Some(bytes),
         Err(err) => match err.kind() {
             io::ErrorKind::NotFound => None,
             _ => panic!("Could not read file: {}: {}", path.display(), err),
-        }
+        },
     }
 }
 
+/// Edit a file in my preferred editor.
 fn edit(file: &Path) {
     process::Command::new("emacsclient")
         .arg("-c")
