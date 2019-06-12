@@ -80,10 +80,8 @@ fn edit_and_commit_post(posts_dir: &Path, name: &str) {
     let mut post_file = posts_dir.to_owned();
     post_file.push(name);
     post_file.set_extension("md");
-    let prev = contents(&post_file);
-    edit(post_file.as_path());
-    let current = contents(&post_file);
-    if prev != current {
+    let changed = edit_file(&post_file);
+    if changed {
         process::Command::new("git")
             .current_dir(posts_dir)
             .arg("add")
@@ -98,6 +96,13 @@ fn edit_and_commit_post(posts_dir: &Path, name: &str) {
             .status()
             .expect("Could not commit file");
     }
+}
+
+fn edit_file(filename: &Path) -> bool {
+    let prev = contents(filename);
+    edit(filename);
+    let current = contents(filename);
+    prev != current
 }
 
 /// Get the contents of a file as a vector.
