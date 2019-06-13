@@ -8,8 +8,12 @@ use std::io;
 use std::path::Path;
 use std::process;
 
+mod builder;
+
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
 const POSTS_DIR: &str = "/Users/jml/src/notebook/posts"; // Parameterize this.
+const STATIC_DIR: &str = "/Users/jml/src/notebook/static"; // Parameterize this.
+const OUTPUT_DIR: &str = "/Users/jml/src/notebook/output"; // Parameterize this.
 
 fn main() {
     let app = App::new("blake")
@@ -70,7 +74,11 @@ fn get_latest_file(posts_dir: &Path) -> Option<ffi::OsString> {
 }
 
 fn build() {
-    println!("build");
+    let path = Path::new(OUTPUT_DIR);
+    let output = builder::OutputPath {
+        path: path.to_owned(),
+    };
+    builder::do_build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output);
 }
 
 /// Edit the blog post with the given name inside the posts directory.
