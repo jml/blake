@@ -1,5 +1,9 @@
 extern crate chrono;
 extern crate clap;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate tera;
 use chrono::prelude::*;
 use clap::{App, Arg, SubCommand};
 use std::ffi;
@@ -11,9 +15,9 @@ use std::process;
 mod builder;
 
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
-const POSTS_DIR: &str = "/Users/jml/src/notebook/posts"; // Parameterize this.
-const STATIC_DIR: &str = "/Users/jml/src/notebook/static"; // Parameterize this.
-const OUTPUT_DIR: &str = "/Users/jml/src/notebook/output"; // Parameterize this.
+const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // Parameterize this.
+const STATIC_DIR: &str = "/Users/jml/src/notebook/static/"; // Parameterize this.
+const OUTPUT_DIR: &str = "/Users/jml/src/blake/output/"; // Parameterize this.
 
 fn main() {
     let app = App::new("blake")

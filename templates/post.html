@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block body %}
+<section id="the-post">
+{% if title -%}
+<p class=subtitle>{{ title }}</p>
+{%- endif %}
+<dl class=metadata>
+<dt>Published</dt>
+<dd class="post-date">{{ date }}</dd>
+</dl>
+{{ post | safe }}
+</section>
+{% endblock body %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>
+{% if title -%}
+jml's notebook: {{ title }}
+{%- else -%}
+jml's notebook
+{%- endif %}
+    </title>
+    <link rel="stylesheet" href="/static/pygments.css"/>
+    <link rel="stylesheet" href="/static/tufte.css"/>
+    <link rel="stylesheet" href="/static/latex.css"/>
+    <link rel="stylesheet" href="/static/jmlnotes.css"/>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body>
+    <article>
+        <h1><a href="/">jml's notebook</a></h1>
+{% if title -%}
+        <p class=subtitle>{{title }}</p>
+{%- endif %}
+
+        {% block body %}{% endblock body %}
+    </article>
+<footer>
+Copyright Jonathan M. Lange.
+
+Based on <a href="https://github.com/DRMacIver/notebook">DRMacIver's notebook</a>. Used with permission.
+CSS mostly due to <a href="https://edwardtufte.github.io/tufte-css/">Tufte CSS</a> by Dave Liepmann.
+</footer>
+  </body>
+</html>

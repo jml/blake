@@ -1,6 +1,9 @@
+use chrono::prelude::*;
 use fs_extra::dir;
-use std::{fs, io};
 use std::path::{Path, PathBuf};
+use std::{fs, io};
+
+mod html;
 
 pub struct OutputPath {
     pub path: PathBuf,
@@ -26,7 +29,7 @@ impl OutputPath {
 
 pub fn do_build(static_dir: &Path, posts_dir: &Path, output: &OutputPath) {
     copy_static_resources(static_dir, &output.static_dir());
-    build_posts(posts_dir, &output.posts_dir());
+    build_posts(posts_dir, &output.posts_dir()).expect("Couldn't build posts");
     remove_deleted_posts(posts_dir, &output.posts_dir());
     generate_index(&output.index());
     generate_feed(&output.feed());
@@ -46,18 +49,44 @@ fn copy_static_resources(input_dir: &Path, output_dir: &Path) {
         },
     }
     // Ensure the directory exists.
-    fs::create_dir(output_dir).expect(&format!("Could not create directory: {}", output_dir.display()));
+    fs::create_dir_all(output_dir).expect(&format!(
+        "Could not create directory: {}",
+        output_dir.display()
+    ));
     // Copy the one in the library.
     let options = dir::CopyOptions::new();
-    dir::copy(input_dir, output_dir, &options).expect(&format!("Could not copy {} to {}", input_dir.display(), output_dir.display()));
+    dir::copy(input_dir, output_dir, &options).expect(&format!(
+        "Could not copy {} to {}",
+        input_dir.display(),
+        output_dir.display()
+    ));
 }
 
-fn build_posts(input_dir: &Path, output_dir: &Path) {
+fn build_posts(input_dir: &Path, output_dir: &Path) -> io::Result<()> {
     println!(
         "build_posts({}, {})",
         input_dir.display(),
         output_dir.display()
     );
+    let entries = fs::read_dir(input_dir)?;
+    let posts = entries
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("md"));
+    for post_path in posts {
+        let name = post_path
+            .file_stem()
+            .expect(&format!("Post has no file name: {}", post_path.display()));
+        let html_path = output_dir.with_file_name(name).with_extension("html");
+        let date_str = name
+            .to_str()
+            .expect(&format!("Couldn't convert date to string: {:?}", name));
+        let date = Utc
+            .datetime_from_str(date_str, "%Y-%m-%d-%H:%M")
+            .expect(&format!("Couldn't parse date string: {}", date_str));
+        html::build_html(&post_path, &html_path, &date)
+    }
+    Ok(())
 }
 
 fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) {
