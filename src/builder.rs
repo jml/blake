@@ -48,13 +48,9 @@ fn copy_static_resources(input_dir: &Path, output_dir: &Path) {
             ),
         },
     }
-    // Ensure the directory exists.
-    fs::create_dir_all(output_dir).expect(&format!(
-        "Could not create directory: {}",
-        output_dir.display()
-    ));
     // Copy the one in the library.
-    let options = dir::CopyOptions::new();
+    let mut options = dir::CopyOptions::new();
+    options.copy_inside = true;
     dir::copy(input_dir, output_dir, &options).expect(&format!(
         "Could not copy {} to {}",
         input_dir.display(),
