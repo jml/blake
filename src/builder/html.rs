@@ -1,12 +1,12 @@
 extern crate comrak;
 
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 use chrono::prelude::*;
 use comrak::ComrakOptions;
-use lazy_static;
-use tera::Tera;
+use lazy_static::lazy_static;
+use tera::{compile_templates, Tera};
 
 lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
