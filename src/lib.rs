@@ -1,3 +1,4 @@
+use std::error::Error;
 use chrono::prelude::*;
 use std::fs;
 use std::io;
@@ -47,12 +48,12 @@ pub fn edit_post() -> io::Result<()> {
     }
 }
 
-pub fn build() {
+pub fn build() -> Result<(), Box<dyn Error>> {
     let path = Path::new(OUTPUT_DIR);
     let output = builder::OutputPath {
         path: path.to_owned(),
     };
-    builder::do_build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output);
+    builder::do_build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output)
 }
 
 /// Edit the blog post with the given name inside the posts directory.
@@ -60,7 +61,7 @@ pub fn build() {
 /// If it changes, ensure the change is committed.
 fn edit_and_commit_post(posts: &Posts, name: &str) -> io::Result<()> {
     let post_file = posts.get_post_filename(name);
-    let changed = edit_file(&post_file);
+    let changed = edit_file(&post_file)?;
     if changed {
         posts.commit_post(&post_file, name)
     } else {
@@ -68,11 +69,11 @@ fn edit_and_commit_post(posts: &Posts, name: &str) -> io::Result<()> {
     }
 }
 
-fn edit_file(filename: &Path) -> bool {
+fn edit_file(filename: &Path) -> io::Result<bool> {
     let prev = contents(filename);
-    edit(filename);
+    edit(filename)?;
     let current = contents(filename);
-    prev != current
+    Ok(prev != current)
 }
 
 /// Get the contents of a file as a vector.
@@ -90,10 +91,10 @@ fn contents(path: &Path) -> Option<Vec<u8>> {
 }
 
 /// Edit a file in my preferred editor.
-fn edit(file: &Path) {
+fn edit(file: &Path) -> io::Result<()> {
     process::Command::new("emacsclient")
         .arg("-c")
         .arg(file)
-        .status()
-        .expect(&format!("Failed to edit file: {}", file.display()));
+        .status()?;
+    Ok(())
 }

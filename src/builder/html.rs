@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fs;
 use std::path::Path;
 
@@ -12,24 +13,22 @@ lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
 }
 
-pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) {
+pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) -> Result<(), Box<dyn Error>> {
     println!(
         "build_html({}, {}, {})",
         source.display(),
         dest.display(),
         date
     );
-    let contents =
-        fs::read_to_string(source).expect(&format!("Could not read file: {}", source.display()));
+    let contents = fs::read_to_string(source)?;
     let (title, output) = render_markdown(&contents);
     let mut context = tera::Context::new();
     context.insert("post", &output);
     context.insert("title", &title);
     context.insert("date", &date.format("%Y-%m-%d").to_string());
-    let rendered = TERA
-        .render("post.html", &context)
-        .expect(&format!("Could not render template: {:?}", TERA.templates));
-    fs::write(dest, rendered).expect(&format!("Couldn't write to file: {}", dest.display()));
+    let rendered = TERA.render("post.html", &context)?;
+    fs::write(dest, rendered)?;
+    Ok(())
 }
 
 fn render_markdown(contents: &str) -> (Option<String>, String) {

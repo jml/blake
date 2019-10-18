@@ -9,7 +9,7 @@ pub struct Posts {
 
 impl Posts {
     pub fn new(path: PathBuf) -> Posts {
-        return Posts { path };
+        Posts { path }
     }
 
     pub fn get_latest_file(&self) -> io::Result<Option<PathBuf>> {
