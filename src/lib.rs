@@ -1,11 +1,13 @@
 use chrono::prelude::*;
-use std::ffi;
 use std::fs;
 use std::io;
 use std::path::Path;
 use std::process;
 
 mod builder;
+mod posts;
+
+use posts::Posts;
 
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
 const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // Parameterize this.
@@ -14,32 +16,35 @@ const OUTPUT_DIR: &str = "/Users/jml/src/blake/output/"; // Parameterize this.
 
 
 /// Create a new blog post.
-pub fn new_post() {
+pub fn new_post() -> io::Result<()> {
     let now = Utc::now();
     let name = format!("{}", now.format(POST_DATE_FORMAT));
-    edit_and_commit_post(Path::new(POSTS_DIR), &name);
+    let posts = Posts::new(Path::new(POSTS_DIR).to_owned());
+    edit_and_commit_post(&posts, &name)
 }
 
-pub fn edit_post(name: Option<ffi::OsString>) {
-    let posts_dir = Path::new(POSTS_DIR);
-    let name = name.or_else(|| get_latest_file(posts_dir));
-    match name {
+pub fn edit_post() -> io::Result<()> {
+    let posts = Posts::new(Path::new(POSTS_DIR).to_owned());
+    let latest_file = posts.get_latest_file()?;
+    // TODO: Return errors for not finding posts.
+    // TODO: See if we can avoid nested match.
+    match latest_file {
         None => {
             println!("Could not find post to edit.");
-        }
-        Some(n) => {
-            let name = Path::new(&n).file_stem().unwrap();
-            edit_and_commit_post(posts_dir, name.to_str().unwrap());
+            Ok(())
+        },
+        Some(path) => {
+            match path.file_stem().and_then(|stem| stem.to_str()) {
+                None => {
+                    println!("Could not find post to edit.");
+                    Ok(())
+                }
+                Some(name) => {
+                    edit_and_commit_post(&posts, name)
+                }
+            }
         }
     }
-}
-
-fn get_latest_file(posts_dir: &Path) -> Option<ffi::OsString> {
-    let entries = fs::read_dir(posts_dir)
-        .expect(&format!("Couldn't read directory: {}", posts_dir.display()));
-    entries
-        .filter_map(|entry| entry.ok().map(|e| e.file_name()))
-        .max()
 }
 
 pub fn build() {
@@ -53,25 +58,13 @@ pub fn build() {
 /// Edit the blog post with the given name inside the posts directory.
 ///
 /// If it changes, ensure the change is committed.
-fn edit_and_commit_post(posts_dir: &Path, name: &str) {
-    let mut post_file = posts_dir.to_owned();
-    post_file.push(name);
-    post_file.set_extension("md");
+fn edit_and_commit_post(posts: &Posts, name: &str) -> io::Result<()> {
+    let post_file = posts.get_post_filename(name);
     let changed = edit_file(&post_file);
     if changed {
-        process::Command::new("git")
-            .current_dir(posts_dir)
-            .arg("add")
-            .arg(post_file)
-            .status()
-            .expect("Could not add file");
-        process::Command::new("git")
-            .current_dir(posts_dir)
-            .arg("commit")
-            .arg("-m")
-            .arg(format!("Add new post {}", name))
-            .status()
-            .expect("Could not commit file");
+        posts.commit_post(&post_file, name)
+    } else {
+        Ok(())
     }
 }
 

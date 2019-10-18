@@ -1,9 +1,9 @@
 use clap::{App, Arg, SubCommand};
-use std::process;
+use std::{io, process};
 
 use blake;
 
-fn main() {
+fn main() -> io::Result<()> {
     let app = App::new("blake")
         .version("0.1.0")
         .author("Jonathan M. Lange <jml@mumak.net>")
@@ -23,8 +23,8 @@ fn main() {
     let matches = app.get_matches();
     match matches.subcommand_name() {
         Some("new") => blake::new_post(),
-        Some("edit") => blake::edit_post(None),
-        Some("build") => blake::build(),
+        Some("edit") => blake::edit_post(),
+        Some("build") => Ok(blake::build()),
         Some(_) | None => {
             println!("Invalid subcommand given.");
             process::exit(2);
