@@ -53,7 +53,7 @@ pub fn build() -> Result<(), Box<dyn Error>> {
     let output = builder::OutputPath {
         path: path.to_owned(),
     };
-    builder::do_build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output)
+    builder::build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output)
 }
 
 /// Edit the blog post with the given name inside the posts directory.

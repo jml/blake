@@ -28,7 +28,7 @@ impl OutputPath {
     }
 }
 
-pub fn do_build(static_dir: &Path, posts_dir: &Path, output: &OutputPath) -> Result<(), Box<dyn Error>> {
+pub fn build(static_dir: &Path, posts_dir: &Path, output: &OutputPath) -> Result<(), Box<dyn Error>> {
     copy_static_resources(static_dir, &output.static_dir())?;
     build_posts(posts_dir, &output.posts_dir())?;
     remove_deleted_posts(posts_dir, &output.posts_dir());
