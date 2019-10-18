@@ -86,6 +86,7 @@ fn build_posts(input_dir: &Path, output_dir: &Path) -> io::Result<()> {
 }
 
 fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) {
+    // TODO: implement remove_deleted_posts
     println!(
         "remove_deleted_posts({}, {})",
         input_dir.display(),
@@ -94,9 +95,11 @@ fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) {
 }
 
 fn generate_index(index_page: &Path) {
+    // TODO: implement generate_index
     println!("generate_index({})", index_page.display());
 }
 
 fn generate_feed(feed_page: &Path) {
+    // TODO: implement generate_feed
     println!("generate_feed({})", feed_page.display());
 }
