@@ -1,6 +1,6 @@
 use std::error::Error;
-use std::fs;
 use std::path::Path;
+use std::fs;
 
 use chrono::prelude::*;
 use comrak;
@@ -33,10 +33,16 @@ pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) -> Result<()
 
 fn render_markdown(contents: &str) -> (Option<String>, String) {
     let arena = comrak::Arena::new();
-    let root = comrak::parse_document(&arena, contents, &ComrakOptions::default());
+    let options = ComrakOptions {
+        ext_footnotes: true,
+        ext_strikethrough: true,
+        smart: true,
+        ..ComrakOptions::default()
+    };
+    let root = comrak::parse_document(&arena, contents, &options);
     let title = find_title(root).map(|s| s.to_owned());
     let mut html = vec![];
-    comrak::format_html(root, &ComrakOptions::default(), &mut html).expect("Couldn't format HTML");
+    comrak::format_html(root, &options, &mut html).expect("Couldn't format HTML");
     let html_str = String::from_utf8(html).expect("Invalid unicode");
     (title, html_str)
     // TODO: Fork
@@ -97,5 +103,26 @@ more text
 ";
         let root = comrak::parse_document(&arena, contents, &ComrakOptions::default());
         assert_eq!(find_title(&root), Some(String::from("title")))
+    }
+
+    #[test]
+    fn test_basic_render() {
+        let contents = "here's a *thing*";
+        let (_, rendered) = render_markdown(contents);
+        assert_eq!(rendered, "<p>here’s a <em>thing</em></p>\n");
+    }
+
+    #[test]
+    fn test_quotes() {
+        let contents = "here's a \"thing\"";
+        let (_, rendered) = render_markdown(contents);
+        assert_eq!(rendered, "<p>here’s a “thing”</p>\n");
+    }
+
+    #[test]
+    fn test_strikethrough() {
+        let contents = "this is a ~thing~";
+        let (_, rendered) = render_markdown(contents);
+        assert_eq!(rendered, "<p>this is a <del>thing</del></p>\n");
     }
 }
