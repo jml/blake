@@ -1,6 +1,6 @@
 use std::error::Error;
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 use chrono::prelude::*;
 use comrak;
@@ -8,6 +8,8 @@ use comrak::nodes::{NodeHeading, NodeValue};
 use comrak::ComrakOptions;
 use lazy_static::lazy_static;
 use tera::{compile_templates, Tera};
+
+use super::sidenotes;
 
 lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
@@ -42,12 +44,15 @@ fn render_markdown(contents: &str) -> (Option<String>, String) {
     let root = comrak::parse_document(&arena, contents, &options);
     let title = find_title(root).map(|s| s.to_owned());
     let mut html = vec![];
+    sidenotes::render(&arena, root, &options).expect("Couldn't render sidenotes");
+    let options = ComrakOptions {
+        unsafe_: true,
+        ext_footnotes: false,
+        ..options
+    };
     comrak::format_html(root, &options, &mut html).expect("Couldn't format HTML");
     let html_str = String::from_utf8(html).expect("Invalid unicode");
     (title, html_str)
-    // TODO: Fork
-    // file:///Users/jml/src/blake/target/doc/src/comrak/html.rs.html#13-28
-    // and change footnotes to sidenotes.
 }
 
 /// Find the title in the post.
@@ -124,5 +129,20 @@ more text
         let contents = "this is a ~thing~";
         let (_, rendered) = render_markdown(contents);
         assert_eq!(rendered, "<p>this is a <del>thing</del></p>\n");
+    }
+
+    #[test]
+    fn test_sidenotes() {
+        let contents = "I mentioned[^1] a thing.
+
+[^1]: The thing I mentioned
+";
+        let (_, rendered) = render_markdown(contents);
+        let expected = "<p>I mentioned<span>\
+                        <label class=\"margin-toggle sidenote-number\" for=\"sn-1\"></label>\
+                        <input class=\"margin-toggle\" id=\"sn-1\" type=\"checkbox\"/>\
+                        <span class=\"sidenote\">The thing I mentioned</span>\
+                        </span> a thing.</p>\n";
+        assert_eq!(rendered, expected);
     }
 }

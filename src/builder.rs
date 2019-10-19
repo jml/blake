@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 mod html;
+mod sidenotes;
 
 pub struct OutputPath {
     pub path: PathBuf,
