@@ -23,7 +23,7 @@ pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) -> Result<()
         date
     );
     let contents = fs::read_to_string(source)?;
-    let (title, output) = render_markdown(&contents);
+    let (title, output) = render_markdown(&contents)?;
     let mut context = tera::Context::new();
     context.insert("post", &output);
     context.insert("title", &title);
@@ -33,7 +33,7 @@ pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) -> Result<()
     Ok(())
 }
 
-fn render_markdown(contents: &str) -> (Option<String>, String) {
+fn render_markdown(contents: &str) -> Result<(Option<String>, String), Box<dyn Error>> {
     let arena = comrak::Arena::new();
     let options = ComrakOptions {
         ext_footnotes: true,
@@ -44,15 +44,15 @@ fn render_markdown(contents: &str) -> (Option<String>, String) {
     let root = comrak::parse_document(&arena, contents, &options);
     let title = find_title(root).map(|s| s.to_owned());
     let mut html = vec![];
-    sidenotes::render(&arena, root, &options).expect("Couldn't render sidenotes");
+    sidenotes::render(&arena, root, &options)?;
     let options = ComrakOptions {
         unsafe_: true,
         ext_footnotes: false,
         ..options
     };
-    comrak::format_html(root, &options, &mut html).expect("Couldn't format HTML");
-    let html_str = String::from_utf8(html).expect("Invalid unicode");
-    (title, html_str)
+    comrak::format_html(root, &options, &mut html)?;
+    let html_str = String::from_utf8(html)?;
+    Ok((title, html_str))
 }
 
 /// Find the title in the post.
@@ -113,21 +113,21 @@ more text
     #[test]
     fn test_basic_render() {
         let contents = "here's a *thing*";
-        let (_, rendered) = render_markdown(contents);
+        let (_, rendered) = render_markdown(contents).unwrap();
         assert_eq!(rendered, "<p>here’s a <em>thing</em></p>\n");
     }
 
     #[test]
     fn test_quotes() {
         let contents = "here's a \"thing\"";
-        let (_, rendered) = render_markdown(contents);
+        let (_, rendered) = render_markdown(contents).unwrap();
         assert_eq!(rendered, "<p>here’s a “thing”</p>\n");
     }
 
     #[test]
     fn test_strikethrough() {
         let contents = "this is a ~thing~";
-        let (_, rendered) = render_markdown(contents);
+        let (_, rendered) = render_markdown(contents).unwrap();
         assert_eq!(rendered, "<p>this is a <del>thing</del></p>\n");
     }
 
@@ -137,7 +137,7 @@ more text
 
 [^1]: The thing I mentioned
 ";
-        let (_, rendered) = render_markdown(contents);
+        let (_, rendered) = render_markdown(contents).unwrap();
         let expected = "<p>I mentioned<span>\
                         <label class=\"margin-toggle sidenote-number\" for=\"sn-1\"></label>\
                         <input class=\"margin-toggle\" id=\"sn-1\" type=\"checkbox\"/>\
