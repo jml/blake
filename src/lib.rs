@@ -11,9 +11,9 @@ mod posts;
 use posts::Posts;
 
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
-const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // Parameterize this.
-const STATIC_DIR: &str = "/Users/jml/src/notebook/static/"; // Parameterize this.
-const OUTPUT_DIR: &str = "/Users/jml/src/blake/output/"; // Parameterize this.
+const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // TODO: Parameterize POSTS_DIR.
+const STATIC_DIR: &str = "/Users/jml/src/notebook/static/"; // TODO: Parameterize STATIC_DIR.
+const OUTPUT_DIR: &str = "/Users/jml/src/blake/output/"; // TODO: Parameterize OUTPUT_DIR.
 
 /// Create a new blog post.
 pub fn new_post() -> io::Result<()> {

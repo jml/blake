@@ -42,6 +42,8 @@ pub fn build(
     Ok(())
 }
 
+// TODO: Add logging.
+
 fn copy_static_resources(
     input_dir: &Path,
     output_dir: &Path,
