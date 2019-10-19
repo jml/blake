@@ -29,7 +29,11 @@ impl OutputPath {
     }
 }
 
-pub fn build(static_dir: &Path, posts_dir: &Path, output: &OutputPath) -> Result<(), Box<dyn Error>> {
+pub fn build(
+    static_dir: &Path,
+    posts_dir: &Path,
+    output: &OutputPath,
+) -> Result<(), Box<dyn Error>> {
     copy_static_resources(static_dir, &output.static_dir())?;
     build_posts(posts_dir, &output.posts_dir())?;
     remove_deleted_posts(posts_dir, &output.posts_dir());
@@ -38,7 +42,10 @@ pub fn build(static_dir: &Path, posts_dir: &Path, output: &OutputPath) -> Result
     Ok(())
 }
 
-fn copy_static_resources(input_dir: &Path, output_dir: &Path) -> Result<u64, fs_extra::error::Error> {
+fn copy_static_resources(
+    input_dir: &Path,
+    output_dir: &Path,
+) -> Result<u64, fs_extra::error::Error> {
     // Delete the existing static directory.
     match fs::remove_dir_all(output_dir) {
         Ok(_) => {}

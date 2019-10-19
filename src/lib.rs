@@ -1,5 +1,5 @@
-use std::error::Error;
 use chrono::prelude::*;
+use std::error::Error;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -14,7 +14,6 @@ const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
 const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // Parameterize this.
 const STATIC_DIR: &str = "/Users/jml/src/notebook/static/"; // Parameterize this.
 const OUTPUT_DIR: &str = "/Users/jml/src/blake/output/"; // Parameterize this.
-
 
 /// Create a new blog post.
 pub fn new_post() -> io::Result<()> {
@@ -33,18 +32,14 @@ pub fn edit_post() -> io::Result<()> {
         None => {
             println!("Could not find post to edit.");
             Ok(())
-        },
-        Some(path) => {
-            match path.file_stem().and_then(|stem| stem.to_str()) {
-                None => {
-                    println!("Could not find post to edit.");
-                    Ok(())
-                }
-                Some(name) => {
-                    edit_and_commit_post(&posts, name)
-                }
-            }
         }
+        Some(path) => match path.file_stem().and_then(|stem| stem.to_str()) {
+            None => {
+                println!("Could not find post to edit.");
+                Ok(())
+            }
+            Some(name) => edit_and_commit_post(&posts, name),
+        },
     }
 }
 
