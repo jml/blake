@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use fs_extra::dir;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::{fs, io};
+use std::{ffi, fs, io};
 
 mod html;
 mod sidenotes;
@@ -36,7 +36,7 @@ pub fn build(
 ) -> Result<(), Box<dyn Error>> {
     copy_static_resources(static_dir, &output.static_dir())?;
     build_posts(posts_dir, &output.posts_dir())?;
-    remove_deleted_posts(posts_dir, &output.posts_dir());
+    remove_deleted_posts(posts_dir, &output.posts_dir())?;
     generate_index(&output.index());
     generate_feed(&output.feed());
     Ok(())
@@ -71,6 +71,7 @@ fn build_posts(input_dir: &Path, output_dir: &Path) -> Result<(), Box<dyn Error>
         output_dir.display()
     );
     let entries = fs::read_dir(input_dir)?;
+    // TODO: Only rebuild posts that have been edited more recently.
     let posts = entries
         .filter_map(|e| e.ok())
         .map(|e| e.path())
@@ -89,13 +90,21 @@ fn build_posts(input_dir: &Path, output_dir: &Path) -> Result<(), Box<dyn Error>
     Ok(())
 }
 
-fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) {
-    // TODO: implement remove_deleted_posts
-    println!(
-        "remove_deleted_posts({}, {})",
-        input_dir.display(),
-        output_dir.display()
-    );
+fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) -> io::Result<()> {
+    let html_posts = fs::read_dir(output_dir)?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|path| path.extension() == Some(ffi::OsStr::new("html")));
+    for html_path in html_posts {
+        let name = html_path
+            .file_stem()
+            .expect("Files from a directory listing should have file names");
+        let source_path = input_dir.with_file_name(name).with_extension("md");
+        if !source_path.is_file() {
+            fs::remove_file(html_path)?;
+        }
+    }
+    Ok(())
 }
 
 fn generate_index(index_page: &Path) {
