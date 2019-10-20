@@ -7,7 +7,7 @@ use comrak;
 use comrak::nodes::{NodeHeading, NodeValue};
 use comrak::ComrakOptions;
 use lazy_static::lazy_static;
-use serde::Serialize;
+use serde;
 use tera::{compile_templates, Tera};
 
 use super::sidenotes;
@@ -16,18 +16,20 @@ lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 pub struct Post {
     body: String,
     title: Option<String>,
     date: DateTime<Utc>,
+    url: String,
 }
 
 impl Post {
     pub fn render(source: &Path, date: &DateTime<Utc>) -> Result<Post, Box<dyn Error>> {
         let contents = fs::read_to_string(source)?;
         let (title, body) = render_markdown(&contents)?;
-        Ok(Post {body, title, date: date.clone()})
+        let url = String::from("");
+        Ok(Post {body, title, date: date.clone(), url})
     }
 
     pub fn write_html(&self, dest_file: &Path) -> Result<(), Box<dyn Error>> {
