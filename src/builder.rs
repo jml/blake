@@ -72,12 +72,13 @@ fn copy_static_resources(
 }
 
 fn build_posts(posts: &posts::Posts, output_dir: &Path) -> Result<Vec<html::Post>, Box<dyn Error>> {
+    fs::create_dir_all(output_dir)?;
     let posts = posts.iter_posts()?;
     let mut html_posts = Vec::new();
     for post in posts {
         let post = post?;
         let html_post = html::Post::render(&post.path(), &post.date())?;
-        let html_path = output_dir.with_file_name(post.name()).with_extension("html");
+        let html_path = output_dir.join(post.name()).with_extension("html");
         html_post.write_html(&html_path)?;
         html_posts.push(html_post);
     }
