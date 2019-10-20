@@ -104,3 +104,6 @@ fn generate_feed(feed_page: &Path) {
     // TODO: implement generate_feed. Ideally use third-party library.
     println!("generate_feed({})", feed_page.display());
 }
+
+// TODO: Use pre-commit
+// TODO: Set up dependabot
