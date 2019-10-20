@@ -47,8 +47,8 @@ impl Posts {
     }
 
     /// Is there a post with the given name?
-    pub fn is_post<T: AsRef<std::ffi::OsStr>>(&self, name: T) -> bool {
-        let source_path = self.path.with_file_name(name).with_extension("md");
+    pub fn is_post<T: AsRef<Path>>(&self, name: T) -> bool {
+        let source_path = self.path.join(&name).with_extension("md");
         source_path.is_file()
     }
 
