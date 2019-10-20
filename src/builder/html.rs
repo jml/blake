@@ -7,6 +7,7 @@ use comrak;
 use comrak::nodes::{NodeHeading, NodeValue};
 use comrak::ComrakOptions;
 use lazy_static::lazy_static;
+use serde::Serialize;
 use tera::{compile_templates, Tera};
 
 use super::sidenotes;
@@ -15,21 +16,40 @@ lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
 }
 
-pub fn build_html(source: &Path, dest: &Path, date: &DateTime<Utc>) -> Result<(), Box<dyn Error>> {
-    println!(
-        "build_html({}, {}, {})",
-        source.display(),
-        dest.display(),
-        date
-    );
-    let contents = fs::read_to_string(source)?;
-    let (title, output) = render_markdown(&contents)?;
+#[derive(Serialize)]
+pub struct Post {
+    body: String,
+    title: Option<String>,
+    date: DateTime<Utc>,
+}
+
+impl Post {
+    pub fn render(source: &Path, date: &DateTime<Utc>) -> Result<Post, Box<dyn Error>> {
+        let contents = fs::read_to_string(source)?;
+        let (title, body) = render_markdown(&contents)?;
+        Ok(Post {body, title, date: date.clone()})
+    }
+
+    pub fn write_html(&self, dest_file: &Path) -> Result<(), Box<dyn Error>> {
+        let mut context = tera::Context::new();
+        context.insert("post", &self.body);
+        context.insert("title", &self.title);
+        context.insert("date", &self.date.format("%Y-%m-%d").to_string());
+        let rendered = TERA.render("post.html", &context)?;
+        fs::write(dest_file, rendered)?;
+        Ok(())
+    }
+
+    pub fn date(&self) -> &DateTime<Utc> {
+        &self.date
+    }
+}
+
+pub fn write_index_html(posts: &[Post], index_page: &Path) -> Result<(), Box<dyn Error>> {
     let mut context = tera::Context::new();
-    context.insert("post", &output);
-    context.insert("title", &title);
-    context.insert("date", &date.format("%Y-%m-%d").to_string());
-    let rendered = TERA.render("post.html", &context)?;
-    fs::write(dest, rendered)?;
+    context.insert("posts", posts);
+    let rendered = TERA.render("index.html", &context)?;
+    fs::write(index_page, rendered)?;
     Ok(())
 }
 

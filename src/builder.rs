@@ -3,7 +3,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{ffi, fs, io};
 
-use crate::posts::{Post, Posts};
+use crate::posts;
 
 mod html;
 mod sidenotes;
@@ -32,14 +32,18 @@ impl OutputPath {
 
 pub fn build(
     static_dir: &Path,
-    posts: &Posts,
+    posts: &posts::Posts,
     output: &OutputPath,
 ) -> Result<(), Box<dyn Error>> {
     copy_static_resources(static_dir, &output.static_dir())?;
-    build_posts(posts, &output.posts_dir())?;
-    remove_deleted_posts(posts, &output.posts_dir())?;
-    generate_index(&output.index());
+
+    let mut html_posts = build_posts(posts, &output.posts_dir())?;
+    html_posts.sort_by_key(|post| *post.date());
+    html_posts.reverse();
+
+    html::write_index_html(&html_posts, &output.index())?;
     generate_feed(&output.feed());
+    remove_deleted_posts(posts, &output.posts_dir())?;
     Ok(())
 }
 
@@ -67,21 +71,20 @@ fn copy_static_resources(
     dir::copy(input_dir, output_dir, &options)
 }
 
-fn build_posts(posts: &Posts, output_dir: &Path) -> Result<(), Box<dyn Error>> {
+fn build_posts(posts: &posts::Posts, output_dir: &Path) -> Result<Vec<html::Post>, Box<dyn Error>> {
     let posts = posts.iter_posts()?;
+    let mut html_posts = Vec::new();
     for post in posts {
         let post = post?;
-        build_post(&post, output_dir)?;
+        let html_post = html::Post::render(&post.path(), &post.date())?;
+        let html_path = output_dir.with_file_name(post.name()).with_extension("html");
+        html_post.write_html(&html_path)?;
+        html_posts.push(html_post);
     }
-    Ok(())
+    Ok(html_posts)
 }
 
-fn build_post(post: &Post, output_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let html_path = output_dir.with_file_name(post.name()).with_extension("html");
-    html::build_html(&post.path(), &html_path, &post.date())
-}
-
-fn remove_deleted_posts(posts: &Posts, output_dir: &Path) -> io::Result<()> {
+fn remove_deleted_posts(posts: &posts::Posts, output_dir: &Path) -> io::Result<()> {
     let html_posts = fs::read_dir(output_dir)?
         .filter_map(|e| e.ok())
         .map(|e| e.path())
@@ -95,11 +98,6 @@ fn remove_deleted_posts(posts: &Posts, output_dir: &Path) -> io::Result<()> {
         }
     }
     Ok(())
-}
-
-fn generate_index(index_page: &Path) {
-    // TODO: implement generate_index
-    println!("generate_index({})", index_page.display());
 }
 
 fn generate_feed(feed_page: &Path) {
