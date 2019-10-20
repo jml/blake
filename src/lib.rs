@@ -45,10 +45,11 @@ pub fn edit_post() -> io::Result<()> {
 
 pub fn build() -> Result<(), Box<dyn Error>> {
     let path = Path::new(OUTPUT_DIR);
+    let posts = Posts::new(Path::new(POSTS_DIR).to_owned());
     let output = builder::OutputPath {
         path: path.to_owned(),
     };
-    builder::build(Path::new(STATIC_DIR), Path::new(POSTS_DIR), &output)
+    builder::build(Path::new(STATIC_DIR), &posts, &output)
 }
 
 /// Edit the blog post with the given name inside the posts directory.

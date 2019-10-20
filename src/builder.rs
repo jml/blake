@@ -1,8 +1,9 @@
-use chrono::prelude::*;
 use fs_extra::dir;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{ffi, fs, io};
+
+use crate::posts::{Post, Posts};
 
 mod html;
 mod sidenotes;
@@ -31,12 +32,12 @@ impl OutputPath {
 
 pub fn build(
     static_dir: &Path,
-    posts_dir: &Path,
+    posts: &Posts,
     output: &OutputPath,
 ) -> Result<(), Box<dyn Error>> {
     copy_static_resources(static_dir, &output.static_dir())?;
-    build_posts(posts_dir, &output.posts_dir())?;
-    remove_deleted_posts(posts_dir, &output.posts_dir())?;
+    build_posts(posts, &output.posts_dir())?;
+    remove_deleted_posts(posts, &output.posts_dir())?;
     generate_index(&output.index());
     generate_feed(&output.feed());
     Ok(())
@@ -66,33 +67,21 @@ fn copy_static_resources(
     dir::copy(input_dir, output_dir, &options)
 }
 
-fn build_posts(input_dir: &Path, output_dir: &Path) -> Result<(), Box<dyn Error>> {
-    println!(
-        "build_posts({}, {})",
-        input_dir.display(),
-        output_dir.display()
-    );
-    let entries = fs::read_dir(input_dir)?;
-    // TODO: Only rebuild posts that have been edited more recently.
-    let posts = entries
-        .filter_map(|e| e.ok())
-        .map(|e| e.path())
-        .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("md"));
-    for post_path in posts {
-        let name = post_path
-            .file_stem()
-            .ok_or_else(|| format!("Post has no file name: {}", post_path.display()))?;
-        let html_path = output_dir.with_file_name(name).with_extension("html");
-        let date_str = name
-            .to_str()
-            .ok_or_else(|| format!("Couldn't convert date to string: {:?}", name))?;
-        let date = Utc.datetime_from_str(date_str, "%Y-%m-%d-%H:%M")?;
-        html::build_html(&post_path, &html_path, &date)?;
+fn build_posts(posts: &Posts, output_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let posts = posts.iter_posts()?;
+    for post in posts {
+        let post = post?;
+        build_post(&post, output_dir)?;
     }
     Ok(())
 }
 
-fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) -> io::Result<()> {
+fn build_post(post: &Post, output_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let html_path = output_dir.with_file_name(post.name()).with_extension("html");
+    html::build_html(&post.path(), &html_path, &post.date())
+}
+
+fn remove_deleted_posts(posts: &Posts, output_dir: &Path) -> io::Result<()> {
     let html_posts = fs::read_dir(output_dir)?
         .filter_map(|e| e.ok())
         .map(|e| e.path())
@@ -101,8 +90,7 @@ fn remove_deleted_posts(input_dir: &Path, output_dir: &Path) -> io::Result<()> {
         let name = html_path
             .file_stem()
             .expect("Files from a directory listing should have file names");
-        let source_path = input_dir.with_file_name(name).with_extension("md");
-        if !source_path.is_file() {
+        if !posts.is_post(name) {
             fs::remove_file(html_path)?;
         }
     }
@@ -115,6 +103,6 @@ fn generate_index(index_page: &Path) {
 }
 
 fn generate_feed(feed_page: &Path) {
-    // TODO: implement generate_feed
+    // TODO: implement generate_feed. Ideally use third-party library.
     println!("generate_feed({})", feed_page.display());
 }
