@@ -29,7 +29,12 @@ impl Post {
         let contents = fs::read_to_string(source)?;
         let (title, body) = render_markdown(&contents)?;
         let url = String::from("");
-        Ok(Post {body, title, date: date.clone(), url})
+        Ok(Post {
+            body,
+            title,
+            date: date.clone(),
+            url,
+        })
     }
 
     pub fn write_html(&self, dest_file: &Path) -> Result<(), Box<dyn Error>> {
