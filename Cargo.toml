@@ -5,6 +5,7 @@ authors = ["Jonathan Lange <jml@mumak.net>"]
 edition = "2018"
 
 [dependencies]
+atom_syndication = { version = "0.6", features = ["serde"] }
 clap = "2.33"
 chrono = { version = "0.4", features = ["serde"] }
 comrak = "0.6"
