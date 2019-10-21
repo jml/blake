@@ -52,29 +52,25 @@ impl Posts {
         source_path.is_file()
     }
 
-    pub fn iter_posts(&self) -> io::Result<impl Iterator<Item=Result<Post, Error>>> {
-        self.path.read_dir().map(
-            |entries| {
-                entries
-                    .map(|entry| entry.map(|e| e.path()))
-                    .filter_map(|entry| {
-                        match entry {
-                            Err(e) => Some(Err(e)),
-                            Ok(path) => {
-                                if has_extension(&path, "md") {
-                                    Some(Ok(path))
-                                } else {
-                                    None
-                                }
-                            }
+    pub fn iter_posts(&self) -> io::Result<impl Iterator<Item = Result<Post, Error>>> {
+        self.path.read_dir().map(|entries| {
+            entries
+                .map(|entry| entry.map(|e| e.path()))
+                .filter_map(|entry| match entry {
+                    Err(e) => Some(Err(e)),
+                    Ok(path) => {
+                        if has_extension(&path, "md") {
+                            Some(Ok(path))
+                        } else {
+                            None
                         }
-                    })
-                    .map(|entry| {
-                        let path = entry?;
-                        Post::new(path)
-                    })
-            }
-        )
+                    }
+                })
+                .map(|entry| {
+                    let path = entry?;
+                    Post::new(path)
+                })
+        })
     }
 }
 
@@ -100,7 +96,9 @@ impl std::fmt::Display for Error {
             Error::NoFileName(path) => write!(f, "No such filename: {}", path.display()),
             Error::BadFileName(path) => write!(f, "Cannot decode filename: {}", path.display()),
             Error::IoError(io_error) => write!(f, "Cannot read file: {}", io_error),
-            Error::InvalidDateError(parse_error) => write!(f, "Filename is not a valid date: {}", parse_error),
+            Error::InvalidDateError(parse_error) => {
+                write!(f, "Filename is not a valid date: {}", parse_error)
+            }
         }
     }
 }
@@ -135,8 +133,12 @@ pub struct Post {
 
 impl Post {
     pub fn new(path: PathBuf) -> Result<Post, Error> {
-        let name = path.file_stem().ok_or_else(|| Error::NoFileName(path.clone()))?;
-        let name = name.to_str().ok_or_else(|| Error::BadFileName(path.clone()))?;
+        let name = path
+            .file_stem()
+            .ok_or_else(|| Error::NoFileName(path.clone()))?;
+        let name = name
+            .to_str()
+            .ok_or_else(|| Error::BadFileName(path.clone()))?;
         let name = String::from(name);
         let date = Utc.datetime_from_str(&name, crate::POST_DATE_FORMAT)?;
         Ok(Post { path, name, date })
