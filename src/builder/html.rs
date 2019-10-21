@@ -11,6 +11,7 @@ use serde;
 use tera::{compile_templates, Tera};
 
 use super::sidenotes;
+use crate::posts;
 
 lazy_static! {
     pub static ref TERA: Tera = compile_templates!("templates/*.html");
@@ -25,15 +26,18 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn render(source: &Path, date: &DateTime<Utc>) -> Result<Post, Box<dyn Error>> {
-        let contents = fs::read_to_string(source)?;
+    pub fn render(post: &posts::Post) -> Result<Post, Box<dyn Error>> {
+        let contents = fs::read_to_string(&post.path())?;
         let (title, body) = render_markdown(&contents)?;
-        let url = String::from("");
         Ok(Post {
             body,
             title,
-            date: date.clone(),
-            url,
+            date: post.date().clone(),
+            // TODO: This violates abstraction. render() doesn't know where
+            // the post will be written to. Ideally, would store the original
+            // post in html::Post, but that creates weird Serde trait errors
+            // that I can't debug.
+            url: format!("/posts/{}.html", post.name()),
         })
     }
 
