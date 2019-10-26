@@ -5,6 +5,7 @@ use std::{ffi, fs, io};
 
 use crate::posts;
 
+mod feed;
 mod html;
 mod sidenotes;
 
@@ -42,7 +43,7 @@ pub fn build(
     html_posts.reverse();
 
     html::write_index_html(&html_posts, &output.index())?;
-    generate_feed(&output.feed());
+    feed::generate_feed(&html_posts, &output.feed())?;
     remove_deleted_posts(posts, &output.posts_dir())?;
     Ok(())
 }
@@ -99,9 +100,4 @@ fn remove_deleted_posts(posts: &posts::Posts, output_dir: &Path) -> io::Result<(
         }
     }
     Ok(())
-}
-
-fn generate_feed(feed_page: &Path) {
-    // TODO: implement generate_feed. Ideally use third-party library.
-    println!("generate_feed({})", feed_page.display());
 }

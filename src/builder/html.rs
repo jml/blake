@@ -51,8 +51,26 @@ impl Post {
         Ok(())
     }
 
+    pub fn body(&self) -> &str {
+        &self.body
+    }
+
     pub fn date(&self) -> &DateTime<Utc> {
         &self.date
+    }
+
+    pub fn updated(&self) -> &DateTime<Utc> {
+        // TODO: Needs to shell out to Git to figure out when it was actually updated.
+        &self.date
+    }
+
+    pub fn published(&self) -> &DateTime<Utc> {
+        // TODO: Needs to shell out to Git to figure out when it was first created.
+        &self.date
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
     }
 }
 

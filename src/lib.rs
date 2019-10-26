@@ -10,6 +10,8 @@ mod posts;
 
 use posts::Posts;
 
+const SITE_URL: &str = "https://notes.jml.io";
+
 const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
 const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // TODO: Parameterize POSTS_DIR.
 const STATIC_DIR: &str = "/Users/jml/src/notebook/static/"; // TODO: Parameterize STATIC_DIR.
