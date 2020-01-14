@@ -63,7 +63,7 @@ version = "0.1.0"
 dependencies = [
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "comrak 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "comrak 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fs_extra 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -699,7 +699,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cfg-if 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "b486ce3ccf7ffd79fdeb678eac06a9e6c09fc88d33836340becb8fffe87c5e33"
 "checksum chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "31850b4a4d6bae316f7a09e691c944c28299298837edc0a03f755618c23cbc01"
 "checksum clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5067f5bb2d80ef5d68b4c87db81601f0b75bca627bc2ef76b141d7b846a3c6d9"
-"checksum comrak 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ea4c29f52463abf5c7a3ae33dd9b404e2031af82f547cfe65bfac17ba785ea2e"
+"checksum comrak 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e17058cc536cf290563e88787d7b9e6030ce4742943017cc2ffb71f88034021c"
 "checksum deunicode 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 "checksum digest 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "05f47366984d3ad862010e22c7ce81a7dbcaebbdfb37241a620f8b6596ee135c"
 "checksum entities 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b5320ae4c3782150d900b79807611a59a99fc9a1d61d686faafc24b93fc8d7ca"
